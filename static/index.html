@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RAG 问答系统</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-icon">🤖</span>
+          <div>
+            <h1>RAG 问答系统</h1>
+            <p class="subtitle">基于通义千问 + 知识库检索</p>
+          </div>
+        </div>
+        <div class="status" id="status">
+          <span class="status-dot loading"></span>
+          <span>正在初始化...</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="chat-container">
+      <div class="messages" id="messages">
+        <div class="message assistant">
+          <div class="avatar">🤖</div>
+          <div class="bubble">
+            <p>你好！我是 RAG 知识助手，可以基于知识库回答关于 RAG 技术的问题。请输入你的问题开始对话。</p>
+          </div>
+        </div>
+      </div>
+
+      <form class="input-area" id="chat-form">
+        <textarea
+          id="question-input"
+          placeholder="输入你的问题，按 Enter 发送，Shift+Enter 换行..."
+          rows="1"
+          autofocus
+        ></textarea>
+        <button type="submit" id="send-btn" disabled>
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </form>
+    </main>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
