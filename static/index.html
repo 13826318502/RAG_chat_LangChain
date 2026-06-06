@@ -4,49 +4,122 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RAG 问答系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
+  <div class="bg-mesh" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
   <div class="app">
     <header class="header">
       <div class="header-inner">
-        <div class="logo">
-          <span class="logo-icon">🤖</span>
+        <div class="brand">
+          <div class="brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+              <path d="M2 17l10 5 10-5"/>
+              <path d="M2 12l10 5 10-5"/>
+            </svg>
+          </div>
           <div>
             <h1>RAG 问答系统</h1>
-            <p class="subtitle">基于通义千问 + 知识库检索</p>
+            <p class="subtitle">检索增强生成 · 通义千问驱动</p>
           </div>
         </div>
-        <div class="status" id="status">
+        <div class="status-pill" id="status">
           <span class="status-dot loading"></span>
-          <span>正在初始化...</span>
+          <span class="status-text">正在初始化知识库...</span>
         </div>
       </div>
     </header>
 
-    <main class="chat-container">
-      <div class="messages" id="messages">
-        <div class="message assistant">
-          <div class="avatar">🤖</div>
-          <div class="bubble">
-            <p>你好！我是 RAG 知识助手，可以基于知识库回答关于 RAG 技术的问题。请输入你的问题开始对话。</p>
+    <main class="main-layout">
+      <aside class="sidebar">
+        <div class="info-card">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            关于系统
+          </h3>
+          <p>基于 RAG 技术，先从知识库检索相关内容，再由大模型生成精准回答。</p>
+        </div>
+        <div class="info-card">
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            试试这些问题
+          </h3>
+          <div class="suggestions" id="sidebar-suggestions">
+            <button class="suggestion-chip" data-q="什么是 RAG 技术？">什么是 RAG 技术？</button>
+            <button class="suggestion-chip" data-q="RAG 有哪些主要优势？">RAG 有哪些主要优势？</button>
+            <button class="suggestion-chip" data-q="RAG 系统由哪些模块组成？">RAG 系统由哪些模块组成？</button>
+            <button class="suggestion-chip" data-q="RAG 是什么时候提出的？">RAG 是什么时候提出的？</button>
           </div>
         </div>
-      </div>
+        <div class="info-card stats-card" id="stats-card" hidden>
+          <h3>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+            系统状态
+          </h3>
+          <div class="stat-row">
+            <span>知识片段</span>
+            <strong id="stat-chunks">—</strong>
+          </div>
+          <div class="stat-row">
+            <span>API 密钥</span>
+            <strong id="stat-key">—</strong>
+          </div>
+        </div>
+      </aside>
 
-      <form class="input-area" id="chat-form">
-        <textarea
-          id="question-input"
-          placeholder="输入你的问题，按 Enter 发送，Shift+Enter 换行..."
-          rows="1"
-          autofocus
-        ></textarea>
-        <button type="submit" id="send-btn" disabled>
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-          </svg>
-        </button>
-      </form>
+      <section class="chat-panel">
+        <div class="messages" id="messages">
+          <div class="welcome-card" id="welcome-card">
+            <div class="welcome-icon">
+              <svg viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="22" stroke="url(#grad)" stroke-width="2"/>
+                <path d="M16 24l5 5 11-11" stroke="url(#grad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs>
+                  <linearGradient id="grad" x1="0" y1="0" x2="48" y2="48">
+                    <stop stop-color="#22d3ee"/>
+                    <stop offset="1" stop-color="#a78bfa"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+            <h2>你好，我是 RAG 知识助手</h2>
+            <p>我可以基于知识库回答关于 RAG 技术的问题，答案均来自检索到的真实资料。</p>
+            <div class="welcome-suggestions" id="welcome-suggestions">
+              <button class="suggestion-chip" data-q="什么是 RAG 技术？">什么是 RAG 技术？</button>
+              <button class="suggestion-chip" data-q="RAG 有哪些主要优势？">RAG 有哪些主要优势？</button>
+              <button class="suggestion-chip" data-q="RAG 系统由哪些模块组成？">RAG 系统由哪些模块组成？</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="input-wrapper">
+          <form class="input-area" id="chat-form">
+            <div class="input-box">
+              <textarea
+                id="question-input"
+                placeholder="输入你的问题..."
+                rows="1"
+                autofocus
+              ></textarea>
+              <button type="submit" id="send-btn" disabled title="发送">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3.4 20.4 21 12 3.4 3.6 5 11l9 1-9 1z"/>
+                </svg>
+              </button>
+            </div>
+            <p class="input-hint">Enter 发送 · Shift+Enter 换行 · 回答仅基于知识库内容</p>
+          </form>
+        </div>
+      </section>
     </main>
   </div>
 
