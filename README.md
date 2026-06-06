@@ -21,3 +21,35 @@
 - python环境
 - 阿里云百炼 API Key（通义千问）
 
+### 安装步骤
+
+1.下载并解压压缩文件
+
+2.安装依赖
+pip install -r requirements.txt
+
+3.配置API密钥
+用记事本打开.env文件，在“=”右边加上自己的通义千问API Key
+DASHSCOPE_API_KEY=sk-your-api-key-here
+
+4.运行项目
+1.运行.bat文件
+2.（备用）用cmd打开文件目录所在地，输入python app.py运行
+
+## 🖼️ 效果预览
+>界面展示
+![演示截图](demo1.png)
+
+>知识库修改展示
+![演示截图](demo2.png)
+
+## 📝 AI 声明
+本项目只是为了测试LangChain框架，所以在开发过程中大量借助了AI辅助工具（如deepseek、Cursor）进行：
+
+- 代码优化与网页版生成和美化
+- Bug分析与修改
+- 说明文档美化
+  
+**核心逻辑**、**功能设计**和**说明撰写**由开发者独立完成
+
+
