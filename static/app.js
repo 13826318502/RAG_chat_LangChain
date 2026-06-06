@@ -7,19 +7,38 @@ const welcomeCard = document.getElementById("welcome-card");
 const statsCard = document.getElementById("stats-card");
 const statChunks = document.getElementById("stat-chunks");
 const statKey = document.getElementById("stat-key");
+const chatLayout = document.getElementById("chat-layout");
+const knowledgeLayout = document.getElementById("knowledge-layout");
+const kbEditor = document.getElementById("kb-editor");
+const kbSaveBtn = document.getElementById("kb-save");
+const kbReloadBtn = document.getElementById("kb-reload");
+const kbCharCount = document.getElementById("kb-char-count");
+const kbChunkCount = document.getElementById("kb-chunk-count");
+const kbDirtyHint = document.getElementById("kb-dirty-hint");
+const kbToast = document.getElementById("kb-toast");
 
 let isLoading = false;
 let hasChatted = false;
+let currentView = "chat";
+let kbOriginal = "";
+let kbLoaded = false;
+let kbSaving = false;
+let toastTimer = null;
+
+function updateChunkStats(chunkCount) {
+  statChunks.textContent = `${chunkCount} 个`;
+  kbChunkCount.textContent = `${chunkCount} 个片段`;
+  statusEl.innerHTML = `
+    <span class="status-dot"></span>
+    <span class="status-text">已就绪 · ${chunkCount} 个知识片段</span>
+  `;
+}
 
 async function checkStatus() {
   try {
     const res = await fetch("/api/status");
     const data = await res.json();
-    statusEl.innerHTML = `
-      <span class="status-dot"></span>
-      <span class="status-text">已就绪 · ${data.chunk_count} 个知识片段</span>
-    `;
-    statChunks.textContent = `${data.chunk_count} 个`;
+    updateChunkStats(data.chunk_count);
     statKey.textContent = data.api_key_preview;
     statsCard.hidden = false;
     sendBtn.disabled = false;
@@ -160,5 +179,110 @@ function autoResize() {
 }
 
 input.addEventListener("input", autoResize);
+
+function switchView(view) {
+  currentView = view;
+  document.querySelectorAll(".view-nav-btn").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.view === view);
+  });
+  chatLayout.classList.toggle("hidden", view !== "chat");
+  knowledgeLayout.classList.toggle("hidden", view !== "knowledge");
+  if (view === "knowledge") loadKnowledge();
+  else input.focus();
+}
+
+function updateKbMeta() {
+  const content = kbEditor.value;
+  kbCharCount.textContent = `${content.length} 字符`;
+  const dirty = kbLoaded && content !== kbOriginal;
+  kbDirtyHint.classList.toggle("hidden", !dirty);
+  kbSaveBtn.disabled = kbSaving || !dirty || !content.trim();
+  kbReloadBtn.disabled = kbSaving;
+}
+
+function showKbToast(message, type = "success") {
+  clearTimeout(toastTimer);
+  kbToast.textContent = message;
+  kbToast.className = `kb-toast ${type}`;
+  toastTimer = setTimeout(() => kbToast.classList.add("hidden"), 3000);
+}
+
+async function loadKnowledge() {
+  kbEditor.placeholder = "正在加载知识库内容...";
+  kbEditor.disabled = true;
+  kbSaveBtn.disabled = true;
+  kbReloadBtn.disabled = true;
+  try {
+    const res = await fetch("/api/knowledge");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || "加载失败");
+    kbOriginal = data.content;
+    kbEditor.value = data.content;
+    kbLoaded = true;
+    kbCharCount.textContent = `${data.char_count} 字符`;
+    kbChunkCount.textContent = `${data.chunk_count} 个片段`;
+    updateKbMeta();
+  } catch (err) {
+    kbEditor.value = "";
+    showKbToast(err.message || "加载知识库失败", "error");
+  } finally {
+    kbEditor.placeholder = "在此编辑知识库内容...";
+    kbEditor.disabled = false;
+    kbReloadBtn.disabled = false;
+    updateKbMeta();
+  }
+}
+
+async function saveKnowledge() {
+  const content = kbEditor.value.trim();
+  if (!content || kbSaving) return;
+  kbSaving = true;
+  kbSaveBtn.disabled = true;
+  kbReloadBtn.disabled = true;
+  kbEditor.disabled = true;
+  showKbToast("正在保存并重建索引，请稍候...", "success");
+  try {
+    const res = await fetch("/api/knowledge", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      const detail = Array.isArray(data.detail)
+        ? data.detail.map((d) => d.msg).join("；")
+        : data.detail || "保存失败";
+      throw new Error(detail);
+    }
+    kbOriginal = content;
+    kbEditor.value = content;
+    kbCharCount.textContent = `${data.char_count} 字符`;
+    kbChunkCount.textContent = `${data.chunk_count} 个片段`;
+    updateChunkStats(data.chunk_count);
+    showKbToast(data.message || "保存成功");
+    updateKbMeta();
+  } catch (err) {
+    showKbToast(err.message || "保存失败", "error");
+  } finally {
+    kbSaving = false;
+    kbEditor.disabled = false;
+    kbReloadBtn.disabled = false;
+    updateKbMeta();
+  }
+}
+
+document.querySelectorAll(".view-nav-btn").forEach((btn) => {
+  btn.addEventListener("click", () => switchView(btn.dataset.view));
+});
+
+kbEditor.addEventListener("input", updateKbMeta);
+kbSaveBtn.addEventListener("click", saveKnowledge);
+kbReloadBtn.addEventListener("click", () => {
+  if (kbSaving) return;
+  if (kbLoaded && kbEditor.value !== kbOriginal) {
+    if (!confirm("当前有未保存的修改，确定要重新加载吗？")) return;
+  }
+  loadKnowledge();
+});
 
 checkStatus();

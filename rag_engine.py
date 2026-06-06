@@ -1,4 +1,5 @@
 import os
+import threading
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -12,6 +13,7 @@ from langchain_core.runnables import RunnablePassthrough
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 BASE_DIR = Path(__file__).resolve().parent
+KNOWLEDGE_PATH = BASE_DIR / "knowledge_base.txt"
 
 
 def _format_docs(docs):
@@ -27,10 +29,11 @@ class RAGEngine:
 
         self.chunk_count = 0
         self.rag_chain = None
+        self._lock = threading.Lock()
         self._build()
 
     def _build(self):
-        loader = TextLoader(str(BASE_DIR / "knowledge_base.txt"), encoding="utf-8")
+        loader = TextLoader(str(KNOWLEDGE_PATH), encoding="utf-8")
         documents = loader.load()
 
         text_splitter = RecursiveCharacterTextSplitter(
@@ -69,7 +72,19 @@ class RAGEngine:
         )
 
     def ask(self, question: str) -> str:
-        return self.rag_chain.invoke(question)
+        with self._lock:
+            return self.rag_chain.invoke(question)
+
+    def get_knowledge(self) -> str:
+        with open(KNOWLEDGE_PATH, "r", encoding="utf-8") as f:
+            return f.read()
+
+    def update_knowledge(self, content: str) -> int:
+        with self._lock:
+            with open(KNOWLEDGE_PATH, "w", encoding="utf-8") as f:
+                f.write(content)
+            self._build()
+            return self.chunk_count
 
     @property
     def api_key_preview(self) -> str:

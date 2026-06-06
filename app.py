@@ -37,6 +37,22 @@ class StatusResponse(BaseModel):
     chunk_count: int
 
 
+class KnowledgeResponse(BaseModel):
+    content: str
+    char_count: int
+    chunk_count: int
+
+
+class KnowledgeUpdateRequest(BaseModel):
+    content: str = Field(..., min_length=1, max_length=500_000)
+
+
+class KnowledgeUpdateResponse(BaseModel):
+    message: str
+    char_count: int
+    chunk_count: int
+
+
 @app.get("/")
 async def index():
     return FileResponse(BASE_DIR / "static" / "index.html")
@@ -50,6 +66,39 @@ async def status():
         status="ready",
         api_key_preview=engine.api_key_preview,
         chunk_count=engine.chunk_count,
+    )
+
+
+@app.get("/api/knowledge", response_model=KnowledgeResponse)
+async def get_knowledge():
+    if engine is None:
+        raise HTTPException(status_code=503, detail="服务尚未就绪")
+    try:
+        content = engine.get_knowledge()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="知识库文件不存在")
+    return KnowledgeResponse(
+        content=content,
+        char_count=len(content),
+        chunk_count=engine.chunk_count,
+    )
+
+
+@app.put("/api/knowledge", response_model=KnowledgeUpdateResponse)
+async def update_knowledge(req: KnowledgeUpdateRequest):
+    if engine is None:
+        raise HTTPException(status_code=503, detail="服务尚未就绪")
+    content = req.content.strip()
+    if not content:
+        raise HTTPException(status_code=400, detail="知识库内容不能为空")
+    try:
+        chunk_count = engine.update_knowledge(content)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"更新知识库失败: {e}")
+    return KnowledgeUpdateResponse(
+        message="知识库已保存，向量索引已重建",
+        char_count=len(content),
+        chunk_count=chunk_count,
     )
 
 
