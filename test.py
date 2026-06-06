@@ -89,23 +89,11 @@ print("   ✅ 模型已就绪")
 # ========== 步骤6：设计提示词模板 ==========
 print("\n📝 步骤6：设计提示词模板...")
 # 从字符串中创建提示词
-prompt = ChatPromptTemplate.from_template("""
-你是一个专业的知识助手。请严格根据以下【上下文】内容回答用户的问题。
+# 方法1：直接读取文件内容
+with open("prompt_template.txt", "r", encoding="utf-8") as f:
+    prompt_template_str = f.read()
 
-【上下文】
-{context}
-
-【用户问题】
-{question}
-
-【回答要求】
-1. 只能基于上面的【上下文】回答，不要使用你自己的知识
-2. 如果【上下文】中没有相关信息，请直接回答："根据现有知识库，我无法回答这个问题"
-3. 回答要简洁、准确、有条理
-4. 如果上下文中有多条相关信息，请综合后回答
-
-现在开始回答：
-""")
+prompt = ChatPromptTemplate.from_template(prompt_template_str)
 print("   ✅ 提示词模板已就绪")
 
 # ========== 步骤7：构建 RAG 链 ==========
