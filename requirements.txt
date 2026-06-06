@@ -1,10 +1,26 @@
-python-dotenv>=1.0.0
-langchain>=0.3.0
-langchain-community>=0.3.0
-langchain-core>=0.3.0
-langchain-text-splitters>=0.3.0
-langchain-chroma>=0.2.0
-chromadb>=0.5.0
-dashscope>=1.14.0
+# 核心框架
 fastapi>=0.115.0
-uvicorn[standard]>=0.32.0
+uvicorn[standard]>=0.34.0
+
+# LangChain 生态
+langchain>=0.2.0
+langchain_community>=0.2.0
+langchain_core>=0.3.0
+langchain_text_splitters>=0.3.0
+langchain_chroma>=0.2.0
+
+# 阿里云通义千问
+dashscope>=1.0.0
+
+# Pydantic（FastAPI 依赖）
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# 环境变量管理
+python-dotenv>=1.0.0
+
+# Chroma 向量数据库（langchain_chroma 会自动安装 chromadb，但建议显式指定）
+chromadb>=0.5.0
+
+# 可选：如果需要处理 PDF、Markdown 等更多文档格式
+# langchain_community[pdf]  # 取消注释以支持 PDF
